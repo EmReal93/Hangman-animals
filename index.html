@@ -1,0 +1,238 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <title>Hangman</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <style>
+  
+body{
+  font-family:lancelot;
+  background-color: #be88ac;
+
+}
+
+h1{
+  font-family:lancelot;
+  font-size: 50px;
+  text-align: center;
+}
+
+#figure{
+  position: relative;
+  width:100%;
+  max-width:380px;
+  aspect-ratio:380/400;
+  margin:0 auto;
+}
+
+#figure img{
+  position: absolute;
+  top:0;
+  left:0;
+  width:100%;
+  height:100%;
+  border-radius:10%;
+  border:8px double black;
+}
+
+
+
+#figure img.hidden{
+  display:none;
+}
+  </style>
+</head>
+<body>
+  <div class="game">
+    <h1>Hangman-animals</h1>
+
+  <div id="figure">
+    <img src="image/gallows.jpg" alt="Gallows">
+    <img class="part hidden" src="image/head.jpg" alt="Head">
+    <img class="part hidden" src="image/body.jpg" alt="Body">
+    <img class="part hidden" src="image/arm1.jpg" alt="Arm 1">
+    <img class="part hidden" src="image/arm2.jpg" alt="Arm 2">
+    <img class="part hidden" src="image/leg1.jpg" alt="Leg 1">
+    <img class="part hidden" src="image/leg2.jpg" alt="Leg 2">
+</div>
+
+    <div id="wordDisplay">_ _ _</div>
+
+    <div id="message" class="label"></div>
+
+    <div class="row">
+      <label>Enter a letter:</label>
+      <input id="letterInput" type="text" maxlength="1">
+      <button id="guessBtn">Guess</button>
+      <button id="resetBtn">New Word</button>
+    </div>
+
+    <div class="row label">
+      <div>letters tried: <span id="lettersTried">—</span></div>
+      <div style="margin-left:auto;">Remaining guesses: <span id="remaining">6</span></div>
+    </div>
+  </div>
+
+  <div class="row label">
+    <div>wrong letters: <span id= "wrongLetters"></span></div>
+  </div>
+ 
+
+
+  <!-- ====== JavaScript goes at the bottom ====== -->
+  <script>
+
+const wordsArray = ["cat","dog","cow","fox","sloth","bear","snake"];
+
+const game = document.querySelector(".game");
+
+const row = document.querySelector(".row");
+
+const label = document.querySelector(".label");
+
+const rowLabel = document.querySelector(".row label");
+
+const wordDisplay = document.querySelector("#wordDisplay");
+
+const message = document.querySelector("#message");
+
+const input = document.querySelector("#letterInput");
+
+const guessBtn = document.querySelector("#guessBtn");
+
+const resetBtn = document.querySelector("#resetBtn");
+
+const lettersTriedDisplay = document.querySelector("#lettersTried");
+
+const remainingDisplay = document.querySelector("#remaining");
+
+const bodyParts = document.querySelectorAll("#figure .part");
+
+const wrongLettersDisplay = document.querySelector("#wrongLetters");
+
+let secretWord = "";
+
+let secretLetters = [];
+
+let shownWord = []; 
+
+let triedLetters = [];
+
+let guessesLeft = 6;
+
+
+
+guessBtn.addEventListener('click',guessLetter);
+resetBtn.addEventListener('click',startGame);
+
+startGame ();
+
+function startGame() {
+input.value ="";
+message.textContent = "";
+input.disabled = false;
+guessBtn.disabled = false;
+
+secretWord = wordsArray[Math.floor(Math.random() * wordsArray.length)];
+secretLetters = secretWord.split("");
+
+shownWord = secretLetters.map(function (){
+  return"_";
+});
+
+triedLetters = [];
+guessesLeft = 6;
+
+updateDisplay();
+input.focus();
+}
+
+function updateDisplay(){
+  wordDisplay.textContent = shownWord.join(" ");
+
+  lettersTriedDisplay.textContent = triedLetters.length ? triedLetters.join(",") : "-";
+  const wrongLetters = triedLetters.filter(function(letter){
+    return !secretLetters.includes(letter);
+  });
+
+wrongLettersDisplay.textContent = wrongLetters.length ? wrongLetters.join(",") : "-";
+remainingDisplay.textContent = guessesLeft;
+
+const partToShow = 6 - guessesLeft;
+bodyParts.forEach(function(part,index){
+  part.classList.toggle("hidden",index >= partToShow);
+});
+
+message.textContent = "";
+message.classList.remove("win","lose");
+}
+
+function updateGameState(letter){
+  let foundMatch = false;
+
+  for (let i = 0; i < secretLetters.length; i++){
+    if (secretLetters[i] === letter){
+          shownWord[i] = letter;
+          foundMatch = true;
+    }
+
+  }
+
+  if(!foundMatch){
+    guessesLeft = guessesLeft - 1;
+  }
+}
+
+function guessLetter (){
+  const letter = input.value.trim().toLowerCase();
+
+  if (!/^[a-z]$/.test(letter)){
+    message.textContent = "Choose a letter to guess";
+    input.value = "";
+    input.focus();
+    return;
+  }
+
+  if (triedLetters.includes(letter)){
+    message.textContent = "You already guessed that, pick again.";
+    input.value = "";
+    input.focus();
+    return;
+  }
+
+  triedLetters.push(letter);
+
+  updateGameState(letter);
+  updateDisplay();
+  checkWinLose();
+
+  input.value = "";
+  input.focus();
+
+}
+
+
+function checkWinLose(){
+  let roundOver = false;
+
+  if (shownWord.join("")=== secretWord){
+    message.textContent = "You Win!";
+    message.classList.add("win");
+    roundOver = true;
+  } else if (guessesLeft === 0){
+    message.textContent = "You Lose! The word was \"" + secretWord + "\".";
+    message.classList.add("lose");
+    roundOver = true;
+  }
+
+  if (roundOver){
+    input.disabled = true;
+    guessBtn.disabled = true;
+  }
+}
+
+
+  </script>
+</body>
+</html>
